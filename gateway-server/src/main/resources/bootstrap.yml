@@ -1,0 +1,59 @@
+eureka:
+  client:
+    serviceUrl:
+      #配置服务中心(可配置多个,用逗号隔开)
+      defaultZone: http://admin:admin@localhost:9000/eureka/
+spring:
+  cloud:
+    config:
+      enabled: false
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            # 允许携带认证信息
+            # 允许跨域的源(网站域名/ip)，设置*为全部
+            # 允许跨域请求里的head字段，设置*为全部
+            # 允许跨域的method， 默认为GET和OPTIONS，设置*为全部
+            # 跨域允许的有效期
+            allow-credentials: true
+            allowed-origins: "*"
+            allowed-headers: "*"
+            allowed-methods:
+              - OPTIONS
+              - GET
+              - POST
+            max-age: 3600
+            # 允许response的head信息
+            # 默认仅允许如下6个：
+            #   Cache-Control
+            #   Content-Language
+            #   Content-Type
+            #   Expires
+            #   Last-Modified
+            #   Pragma
+            #exposed-headers:
+      routes:
+        - id: oauth-server #id：我们自定义的路由 ID，保持唯一
+          uri: lb://oauth-server
+          predicates:
+            - Path=/oauth/**
+          filters:
+            - StripPrefix=1
+        #           StripPrefix=1表示路由时会去除/admin/
+        - id: manager-server
+          uri: lb://manage-server
+          predicates:
+            - Path=/manage/**
+          filters:
+            - StripPrefix=1
+  application:
+    name: gateway
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS

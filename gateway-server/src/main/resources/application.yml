@@ -1,0 +1,17 @@
+server:
+  port: 9093
+#服务器发现注册配置
+eureka:
+  client:
+    serviceUrl:
+      #配置服务中心(可配置多个,用逗号隔开)
+      defaultZone: http://admin:admin@localhost:9000/eureka/
+spring:
+  redis:
+    database: 12
+    host: 127.0.0.1
+    password: 123456
+    port: 6379
+    timeout: 3000
+permit:
+  url: "/login"
