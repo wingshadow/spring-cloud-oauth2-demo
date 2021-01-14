@@ -14,4 +14,4 @@ spring:
     port: 6379
     timeout: 3000
 permit:
-  url: "/login"
+  url: "/login,/logout,/getToken,/refreshToken,/loginByMobile"

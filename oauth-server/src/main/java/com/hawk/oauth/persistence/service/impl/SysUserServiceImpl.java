@@ -175,6 +175,6 @@ public class SysUserServiceImpl extends AbstractBaseServiceImpl implements SysUs
 
     @Override
     public SysUser selectByMobile(String mobile){
-        return sysUserMapper.selectByName(mobile);
+        return sysUserMapper.selectByMobile(mobile);
     }
 }

@@ -68,7 +68,7 @@ public class AuthController {
     @PostMapping(value = "/loginByMobile")
     public String loginByMobile(SmsRequest smsRequest) {
 
-        AuthToken authToken = authService.login(smsRequest.getMobile(), smsRequest.getCode(), "mobile", clientId,
+        AuthToken authToken = authService.loginByMobile(smsRequest.getMobile(), smsRequest.getCode(), "mobile", clientId,
                 clientSecret);
 
         String jti = authToken.getJti();

@@ -32,4 +32,6 @@ public interface SysUserMapper {
     List<SysUser> selectByConditions(SysUser sysUser);
 
     SysUser selectByName(String name);
+
+    SysUser selectByMobile(String mobile);
 }

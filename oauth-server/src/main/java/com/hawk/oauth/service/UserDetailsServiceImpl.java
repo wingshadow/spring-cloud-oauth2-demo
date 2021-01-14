@@ -53,7 +53,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
 
         SysUser sysUser = sysUserService.selectByName(username);
-
         JwtUser jwtUser = null;
         // 账户冻结
         if (sysUser.getStatus() == 0) {
@@ -89,20 +88,30 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
 
         SysUser sysUser = sysUserService.selectByMobile(mobile);
-        Set<String> permissions = sysUserService.findPermissions(sysUser.getId());
-//      权限暂时测试加入测试权限
-        if (permissions.size() == 0) {
-            permissions.add("sys:dept:view");
-        }
+        JwtUser jwtUser = null;
+        if (sysUser.getStatus() == 0) {
+            jwtUser = new JwtUser(sysUser.getName(), sysUser.getPassword(),
+                    true,
+                    true,
+                    true,
+                    false,
+                    null);
+        } else {
+            Set<String> permissions = sysUserService.findPermissions(sysUser.getId());
+            // 权限暂时测试加入测试权限
+            if (permissions.size() == 0) {
+                permissions.add("sys:dept:view");
+            }
 
-        String user_permission_string = StringUtils.join(permissions.toArray(), ",");
-        JwtUser jwtUser = new JwtUser(sysUser.getName(), sysUser.getPassword(),
-                AuthorityUtils.commaSeparatedStringToAuthorityList(user_permission_string));
-        jwtUser.setId(sysUser.getId().toString());
-        jwtUser.setAvatar(sysUser.getAvatar());
-        jwtUser.setName(sysUser.getNickName());
-        jwtUser.setMobile(sysUser.getMobile());
-        jwtUser.setStatus(sysUser.getStatus());
+            String user_permission_string = StringUtils.join(permissions.toArray(), ",");
+            jwtUser = new JwtUser(sysUser.getName(), sysUser.getPassword(),
+                    AuthorityUtils.commaSeparatedStringToAuthorityList(user_permission_string));
+            jwtUser.setId(sysUser.getId().toString());
+            jwtUser.setAvatar(sysUser.getAvatar());
+            jwtUser.setName(sysUser.getNickName());
+            jwtUser.setMobile(sysUser.getMobile());
+            jwtUser.setStatus(sysUser.getStatus());
+        }
 
         return jwtUser;
     }

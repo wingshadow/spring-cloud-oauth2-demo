@@ -3,6 +3,7 @@ package com.hawk.oauth.service;
 import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
 import com.hawk.oauth.bean.AuthToken;
+import com.hawk.oauth.exception.GlobalException;
 import com.hawk.oauth.redis.RedisKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,13 +50,14 @@ public class AuthService {
 
     /**
      * 登陆验证并返回token
+     *
      * @param username
      * @param password
      * @param clientId
      * @param clientSecret
      * @return
      */
-    public AuthToken login(String username, String password,String type, String clientId, String clientSecret) {
+    public AuthToken login(String username, String password, String type, String clientId, String clientSecret) {
         //定义body
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", type);
@@ -65,7 +67,24 @@ public class AuthService {
         //请求spring security申请令牌
         AuthToken authToken = this.applyToken(body, clientId, clientSecret);
         // 缓存token
-        if(!cacheToken(authToken)){
+        if (!cacheToken(authToken)) {
+            return null;
+        }
+        return authToken;
+
+    }
+
+    public AuthToken loginByMobile(String mobile, String code, String type, String clientId, String clientSecret) {
+        //定义body
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", type);
+        body.add("mobile", mobile);
+        body.add("code", code);
+
+        //请求spring security申请令牌
+        AuthToken authToken = this.applyToken(body, clientId, clientSecret);
+        // 缓存token
+        if (!cacheToken(authToken)) {
             return null;
         }
         return authToken;
@@ -74,19 +93,20 @@ public class AuthService {
 
     /**
      * 刷新token并返回token
+     *
      * @param refreshToken
      * @param clientId
      * @param clientSecret
      * @return
      */
-    public AuthToken refreshToken(String refreshToken,String clientId, String clientSecret){
+    public AuthToken refreshToken(String refreshToken, String clientId, String clientSecret) {
         //定义body
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "refresh_token");
         body.add("refresh_token", refreshToken);
         // 缓存token
         AuthToken authToken = this.applyToken(body, clientId, clientSecret);
-        if(!cacheToken(authToken)){
+        if (!cacheToken(authToken)) {
             return null;
         }
         return authToken;
@@ -94,10 +114,11 @@ public class AuthService {
 
     /**
      * 缓存token
+     *
      * @param token
      * @return
      */
-    private boolean cacheToken(AuthToken token){
+    private boolean cacheToken(AuthToken token) {
         //用户身份令牌
         String jti = token.getJti();
         //存储到redis中的内容
@@ -127,7 +148,6 @@ public class AuthService {
     }
 
     /**
-     *
      * @param body
      * @param clientId
      * @param clientSecret
@@ -153,26 +173,27 @@ public class AuthService {
         });
 
         ResponseEntity<Map> exchange = restTemplate.exchange(authUrl, HttpMethod.POST, httpEntity, Map.class);
+        if (exchange.getStatusCode().value() != 200) {
+            throw new GlobalException(40001,"系统内部错误");
+        }
         Map bodyMap = exchange.getBody();
-        log.info("bodyMap:{}",bodyMap);
-        if(CollUtil.isEmpty(bodyMap)){
-            return null;
+        if (CollUtil.isEmpty(bodyMap)) {
+            throw new GlobalException(40001,"系统内部错误");
         }
 
         AuthToken authToken = new AuthToken();
-        authToken.setJti((String)bodyMap.get("jti"));
-        authToken.setAccessToken((String)bodyMap.get("access_token"));
-        authToken.setRefreshToken((String)bodyMap.get("refresh_token"));
+        authToken.setJti((String) bodyMap.get("jti"));
+        authToken.setAccessToken((String) bodyMap.get("access_token"));
+        authToken.setRefreshToken((String) bodyMap.get("refresh_token"));
         return authToken;
     }
 
-    private boolean saveToken(String jti, String content, long ttl){
+    private boolean saveToken(String jti, String content, long ttl) {
         String key = RedisKeys.LOGIN_TOKEN_PREFIX + jti;
         stringRedisTemplate.boundValueOps(key).set(content, ttl, TimeUnit.SECONDS);
         Long expire = stringRedisTemplate.getExpire(key, TimeUnit.SECONDS);
         return expire > 0;
     }
-
 
 
     private String getHttpBasic(String clientId, String clientSecret) {

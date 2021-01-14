@@ -1,8 +1,10 @@
 package com.hawk.oauth.mobile;
 
+import com.hawk.oauth.exception.InvalidSmsCodeException;
 import com.hawk.oauth.redis.RedisKeys;
 import com.hawk.oauth.service.UserDetailsServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceAware;
 import org.springframework.context.support.MessageSourceAccessor;
@@ -51,25 +53,17 @@ public class SmsCodeAuthenticationProvider implements AuthenticationProvider, Me
         }
         String code = (String) authentication.getCredentials();
         if (code == null) {
-            log.error("缺失code参数");
             throw new BadCredentialsException(this.messages.getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials", "Missing code"));
         }
-        String cacheCode = stringRedisTemplate.opsForValue().get("sms:" + mobile);
-        if (cacheCode == null || !cacheCode.equals(code)) {
+        // 从redis中获取验证码
+        String cacheCode = stringRedisTemplate.opsForValue().get(RedisKeys.LOGIN_SMS_PREFIX + mobile);
+        if (StringUtils.isBlank(cacheCode) || !cacheCode.equals(code)) {
             log.error("短信验证码错误");
-            throw new BadCredentialsException(this.messages.getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials", "Invalid code"));
+            throw new InvalidSmsCodeException(this.messages.getMessage("", "无效验证码"));
         }
-        //清除redis中的短信验证码
-        //stringRedisTemplate.delete(RedisConstant.SMS_CODE_PREFIX + mobile);
-        UserDetails user;
-        try {
-            user = userDetailsService.loadUserByMobile(mobile);
-        } catch (UsernameNotFoundException var6) {
-            log.info("手机号:" + mobile + "未查到用户信息");
-            if (this.hideUserNotFoundExceptions) {
-                throw new BadCredentialsException(this.messages.getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials", "Bad credentials"));
-            }
-            throw var6;
+        UserDetails user = userDetailsService.loadUserByMobile(mobile);
+        if(user == null){
+            throw new InternalAuthenticationServiceException(this.messages.getMessage("", "用户不存在"));
         }
         check(user);
         SmsCodeAuthenticationToken authenticationToken = new SmsCodeAuthenticationToken(user, code,

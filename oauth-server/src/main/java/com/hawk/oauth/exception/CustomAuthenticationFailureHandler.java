@@ -1,6 +1,7 @@
 package com.hawk.oauth.exception;
 
 import com.alibaba.fastjson.JSON;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -30,6 +31,9 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
         }else if (exception.getClass().isAssignableFrom(LockedException.class)) {
             error.put("code",20004);
             error.put("msg","用户账户已冻结");
+        }else if(exception.getClass().isAssignableFrom(InvalidSmsCodeException.class)){
+            error.put("code",70006);
+            error.put("msg","无效短信验证码");
         }
         response.getWriter().write(JSON.toJSONString(error));
     }

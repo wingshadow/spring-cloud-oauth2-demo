@@ -34,7 +34,7 @@ spring:
             #   Pragma
             #exposed-headers:
       routes:
-        - id: oauth-server #id：我们自定义的路由 ID，保持唯一
+        - id: OAUTH-SERVER #id：我们自定义的路由 ID，保持唯一
           uri: lb://oauth-server
           predicates:
             - Path=/oauth/**

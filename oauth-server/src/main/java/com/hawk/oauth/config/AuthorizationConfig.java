@@ -85,7 +85,7 @@ public class AuthorizationConfig extends AuthorizationServerConfigurerAdapter {
         JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
         KeyStoreKeyFactory keyStoreKeyFactory = new KeyStoreKeyFactory(new ClassPathResource("auth-jwt.jks"),
                 "123456"
-                .toCharArray());
+                        .toCharArray());
 //        KeyPair keyPair = new KeyStoreKeyFactory
 //                (keyProperties.getKeyStore().getLocation(), keyProperties.getKeyStore().getSecret().toCharArray())
 //                .getKeyPair(keyProperties.getKeyStore().getAlias(),
@@ -106,10 +106,10 @@ public class AuthorizationConfig extends AuthorizationServerConfigurerAdapter {
                 .authenticationManager(authenticationManager)
                 //令牌存储
                 .tokenStore(tokenStore)
-                // 添加授权类型
-                .tokenGranter(tokenGranter(endpoints))
                 //用户信息service
-                .userDetailsService(userDetailsService);
+                .userDetailsService(userDetailsService)
+                // 添加授权类型
+                .tokenGranter(tokenGranter(endpoints));
     }
 
     //授权服务器的安全配置
@@ -124,12 +124,17 @@ public class AuthorizationConfig extends AuthorizationServerConfigurerAdapter {
     private TokenGranter tokenGranter(AuthorizationServerEndpointsConfigurer endpoints) {
         List<TokenGranter> list = new ArrayList<>();
         // 这里配置密码模式、刷新token模式、自定义手机号验证码模式、授权码模式、简化模式
-        list.add(new ResourceOwnerPasswordTokenGranter(authenticationManager, endpoints.getTokenServices(), endpoints.getClientDetailsService(), endpoints.getOAuth2RequestFactory()));
-        list.add(new RefreshTokenGranter(endpoints.getTokenServices(), endpoints.getClientDetailsService(), endpoints.getOAuth2RequestFactory()));
-        list.add(new SmsCodeTokenGranter(authenticationManager,endpoints.getTokenServices(),
+        list.add(new ResourceOwnerPasswordTokenGranter(authenticationManager, endpoints.getTokenServices(),
                 endpoints.getClientDetailsService(), endpoints.getOAuth2RequestFactory()));
-        list.add(new AuthorizationCodeTokenGranter(endpoints.getTokenServices(),endpoints.getAuthorizationCodeServices(), endpoints.getClientDetailsService(), endpoints.getOAuth2RequestFactory()));
-        list.add(new ImplicitTokenGranter(endpoints.getTokenServices(),endpoints.getClientDetailsService(),endpoints.getOAuth2RequestFactory()));
+        list.add(new RefreshTokenGranter(endpoints.getTokenServices(), endpoints.getClientDetailsService(),
+                endpoints.getOAuth2RequestFactory()));
+        list.add(new SmsCodeTokenGranter(authenticationManager, endpoints.getTokenServices(),
+                endpoints.getClientDetailsService(), endpoints.getOAuth2RequestFactory()));
+        list.add(new AuthorizationCodeTokenGranter(endpoints.getTokenServices(),
+                endpoints.getAuthorizationCodeServices(), endpoints.getClientDetailsService(),
+                endpoints.getOAuth2RequestFactory()));
+        list.add(new ImplicitTokenGranter(endpoints.getTokenServices(), endpoints.getClientDetailsService(),
+                endpoints.getOAuth2RequestFactory()));
         return new CompositeTokenGranter(list);
     }
 }
