@@ -40,11 +40,22 @@ spring:
             - Path=/oauth/**
           filters:
             - StripPrefix=1
-        #           StripPrefix=1表示路由时会去除/admin/
+        - id: OAUTH-SERVER2 #id：我们自定义的路由 ID，保持唯一
+          uri: lb://oauth-server2
+          predicates:
+            - Path=/oauth2/**
+          filters:
+            - StripPrefix=1
         - id: manager-server
           uri: lb://manage-server
           predicates:
             - Path=/manage/**
+          filters:
+            - StripPrefix=1
+        - id: order-server
+          uri: lb://order-server
+          predicates:
+            - Path=/order/**
           filters:
             - StripPrefix=1
   application:

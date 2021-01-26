@@ -53,14 +53,14 @@ public class AuthFilter implements GlobalFilter {
                 warning(exchange);
             }
 
-            AuthToken token = getUserToken(jti);
-            if(token == null){
+            String  accessToken = getUserToken(jti);
+            if(accessToken == null){
                 warning(exchange);
             }
 
             //在header添加Authorization数据
             Consumer<HttpHeaders> httpHeaders = httpHeader -> {
-                httpHeader.set("Authorization", TOKEN_PREFIX + " " + token.getAccessToken());
+                httpHeader.set("Authorization", TOKEN_PREFIX + " " + accessToken);
             };
             ServerHttpRequest serverHttpRequest = exchange.getRequest().mutate().headers(httpHeaders).build();
             exchange.mutate().request(serverHttpRequest).build();
@@ -68,18 +68,12 @@ public class AuthFilter implements GlobalFilter {
         return chain.filter(exchange);
     }
 
-    private AuthToken getUserToken(String jti) {
+    private String getUserToken(String jti) {
         String key = RedisKeys.LOGIN_TOKEN_PREFIX + jti;
         //从redis中取到令牌信息
         String value = stringRedisTemplate.opsForValue().get(key);
         //转成对象
-        try {
-            AuthToken authToken = JSON.parseObject(value, AuthToken.class);
-            return authToken;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        return value;
     }
 
     private boolean handler(ServerHttpRequest request) {

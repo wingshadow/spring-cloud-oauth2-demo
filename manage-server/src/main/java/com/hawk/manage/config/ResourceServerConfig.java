@@ -82,7 +82,7 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
         //所有请求必须认证通过
         http.authorizeRequests()
                 // 配置不需要安全拦截url
-                .antMatchers("/test/no_need_token").permitAll()
+                .antMatchers("/getOrder","/test/no_need_token").permitAll()
                 .antMatchers(HttpMethod.OPTIONS).permitAll()
                 .anyRequest().authenticated();
     }

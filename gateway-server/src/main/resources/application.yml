@@ -1,5 +1,5 @@
 server:
-  port: 9093
+  port: 9091
 #服务器发现注册配置
 eureka:
   client:

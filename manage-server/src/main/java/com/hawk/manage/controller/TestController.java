@@ -1,8 +1,11 @@
 package com.hawk.manage.controller;
 
+import com.hawk.manage.feign.OrderFeignService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
 
 /**
  * @Title: TestController
@@ -12,6 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class TestController {
+
+    @Resource
+    private OrderFeignService orderFeinService;
 
     @PreAuthorize("hasAuthority('sys:user:view')")
 //    @PreAuthorize("hasAuthority('admin')")
@@ -24,4 +30,10 @@ public class TestController {
     public String test2(){
         return "sss";
     }
+
+    @GetMapping(value = "/getOrder")
+    public String getOrder(){
+        return orderFeinService.listOrder();
+    }
+
 }
