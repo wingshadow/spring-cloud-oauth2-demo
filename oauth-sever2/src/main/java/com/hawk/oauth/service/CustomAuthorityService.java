@@ -3,12 +3,15 @@ package com.hawk.oauth.service;
 import com.alibaba.fastjson.JSON;
 import com.hawk.common.constraint.RedisKeys;
 import com.hawk.oauth.bean.AuthorityToken;
+import com.hawk.oauth.bean.UserInfo;
 import com.hawk.oauth.utils.CryptUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.jwt.Jwt;
+import org.springframework.security.jwt.JwtHelper;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidGrantException;
 import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
@@ -55,7 +58,7 @@ public class CustomAuthorityService {
     @Resource
     private ClientDetailsService clientDetailsService;
 
-    public String login(String authorization, String username, String password, String grantType) {
+    public UserInfo login(String authorization, String username, String password, String grantType) {
         try {
             String[] tokens = CryptUtils.decode(authorization);
             String clientId = tokens[0];
@@ -92,7 +95,15 @@ public class CustomAuthorityService {
             saveToken(authorityToken.getJti(),JSON.toJSONString(authorityToken),tokenValiditySeconds);
             saveToken(authorityToken.getJti(),authorityToken.getAccessToken(),tokenValiditySeconds);
             saveRefreshToken(authorityToken.getJti(),authorityToken.getRefreshToken(),refreshValiditySeconds);
-            return authorityToken.getJti();
+
+            Map<String,Object> map = getUserInfo(token.getValue());
+            UserInfo userInfo = new UserInfo();
+            userInfo.setId((String)map.get("id"));
+            userInfo.setUsername(username);
+            userInfo.setMobile((String)map.get("mobile"));
+            userInfo.setAvatar((String)map.get("avatar"));
+            userInfo.setJti(authorityToken.getJti());
+            return userInfo;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -199,5 +210,12 @@ public class CustomAuthorityService {
         stringRedisTemplate.boundValueOps(key).set(content, ttl, TimeUnit.SECONDS);
         Long expire = stringRedisTemplate.getExpire(key, TimeUnit.SECONDS);
         return expire > 0;
+    }
+
+    private Map<String,Object> getUserInfo(String token){
+        Jwt jwt= JwtHelper.decode(token);
+        String claims=jwt.getClaims();
+        Map<String,Object> map = JSON.parseObject(claims);
+        return map;
     }
 }

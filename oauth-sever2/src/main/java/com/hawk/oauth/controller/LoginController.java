@@ -1,5 +1,6 @@
 package com.hawk.oauth.controller;
 
+import com.hawk.oauth.bean.UserInfo;
 import com.hawk.oauth.service.CustomAuthorityService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,13 +21,13 @@ public class LoginController {
     private CustomAuthorityService customAuthorityService;
 
     @PostMapping(value = "/login")
-    public String login(HttpServletRequest request, String username, String password) {
+    public UserInfo login(HttpServletRequest request, String username, String password) {
         String authorization = request.getHeader("Authorization");
         return customAuthorityService.login(authorization, username, password, "password");
     }
 
     @PostMapping(value = "/loginBySmsCode")
-    public String loginBySmsCode(HttpServletRequest request, String mobile, String smsCode) {
+    public UserInfo loginBySmsCode(HttpServletRequest request, String mobile, String smsCode) {
         String authorization = request.getHeader("Authorization");
         return customAuthorityService.login(authorization, mobile, smsCode, "mobile");
     }
